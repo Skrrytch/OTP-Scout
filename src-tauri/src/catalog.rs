@@ -7,7 +7,7 @@ use crate::config;
 use crate::rules::DetectionRule;
 
 /// The catalog is maintained on GitHub, independent of releases.
-const CATALOG_URL: &str = "https://raw.githubusercontent.com/Skrrytch/otp-scout/main/catalog/catalog.json";
+const CATALOG_URL: &str = "https://raw.githubusercontent.com/Skrrytch/OTP-Scout/main/catalog/catalog.json";
 /// Last successfully downloaded catalog, used when GitHub is unreachable.
 const CACHE_FILE: &str = "catalog-cache.json";
 /// Highest catalog format version this build understands.
@@ -58,7 +58,7 @@ pub struct LoadedCatalog {
 fn parse(json: &str) -> Result<Catalog> {
     let catalog: Catalog = serde_json::from_str(json).context("Invalid catalog")?;
     if catalog.version > SUPPORTED_VERSION {
-        bail!("Catalog format v{} is newer than supported (v{SUPPORTED_VERSION}) – please update OTP-Scout", catalog.version);
+        bail!("Catalog format v{} is newer than supported (v{SUPPORTED_VERSION}) – please update OTP Scout", catalog.version);
     }
     Ok(catalog)
 }
@@ -66,7 +66,7 @@ fn parse(json: &str) -> Result<Catalog> {
 async fn fetch() -> Result<String> {
     let client = reqwest::Client::builder()
         .timeout(FETCH_TIMEOUT)
-        .user_agent(concat!("OTP-Scout/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("OTP Scout/", env!("CARGO_PKG_VERSION")))
         .build()?;
     let resp = client.get(CATALOG_URL).send().await?.error_for_status()?;
     Ok(resp.text().await?)

@@ -1,6 +1,6 @@
-# OTP-Scout — Development
+# OTP Scout — Development
 
-Technical notes for building, packaging and extending OTP-Scout. User documentation lives in [README.md](README.md) and [docs/](docs/): [accounts](docs/accounts.md), [rules](docs/rules.md), [local API](docs/api.md) and [configuration files](docs/configuration.md).
+Technical notes for building, packaging and extending OTP Scout. User documentation lives in [README.md](README.md) and [docs/](docs/): [accounts](docs/accounts.md), [rules](docs/rules.md), [local API](docs/api.md) and [configuration files](docs/configuration.md).
 
 ## How It Works
 
@@ -18,7 +18,7 @@ sudo apt install build-essential pkg-config \
   libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev \
   librsvg2-dev libssl-dev libdbus-1-dev
 
-git clone https://github.com/Skrrytch/otp-scout.git
+git clone https://github.com/Skrrytch/OTP-Scout.git
 cd otp-scout/src-tauri
 cargo build --release
 ./target/release/otp-scout

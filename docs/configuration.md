@@ -1,6 +1,6 @@
 # Configuration Files
 
-Everything you set up in OTP-Scout's settings is stored in `~/.config/otp-scout/` and in the system keyring. You don't need to edit these files by hand. This page is for backups, moving to another computer, troubleshooting and scripting.
+Everything you set up in OTP Scout's settings is stored in `~/.config/otp-scout/` and in the system keyring. You don't need to edit these files by hand. This page is for backups, moving to another computer, troubleshooting and scripting.
 
 | Path | Contains |
 |------|----------|
@@ -21,7 +21,7 @@ Everything you set up in OTP-Scout's settings is stored in `~/.config/otp-scout/
 
 **Purpose**: Accounts and API settings. Detection rules live in [`rules.json`](#2-configotp-scoutrulesjson).
 
-**Created by**: OTP-Scout on first account save.
+**Created by**: OTP Scout on first account save.
 
 **Format**: JSON
 
@@ -100,7 +100,7 @@ Versions up to 0.2.0 kept the rules in `accounts[].rules`. On first start they a
 
 **Purpose**: All detection rules, independent of accounts.
 
-**Created by**: OTP-Scout on first account save, or when migrating an older `config.json`. An unreadable file is renamed to `rules.json.broken`, and OTP-Scout starts without rules. Fix the file and rename it back, or import it via **Rules → Import…**.
+**Created by**: OTP Scout on first account save, or when migrating an older `config.json`. An unreadable file is renamed to `rules.json.broken`, and OTP Scout starts without rules. Fix the file and rename it back, or import it via **Rules → Import…**.
 
 Rule names (`label`) are unique, ignoring case and surrounding spaces, because import matches rules by name. The editor rejects a second rule with the same name.
 
@@ -224,7 +224,7 @@ New emails are all emails with a UID above the last one handled, read or not; on
 
 **Purpose**: The last rule catalog downloaded from GitHub. It's shown in **Settings → Catalog** when GitHub is unreachable.
 
-**Created by**: OTP-Scout each time the catalog is downloaded. It's safe to delete.
+**Created by**: OTP Scout each time the catalog is downloaded. It's safe to delete.
 
 ---
 
@@ -257,7 +257,7 @@ secret-tool lookup service otp-scout <account-id>
 
 - **Created**: When an account is saved with a non-empty password
 - **Updated**: When an account is edited with a new non-empty password
-- **Deleted**: When an account is removed from OTP-Scout
+- **Deleted**: When an account is removed from OTP Scout
 - **Read**: On app startup and on "Reconnect All"
 
 Passwords are **never** written to `config.json`. The `pass` field is marked `#[serde(skip_serializing)]`: it is accepted from the settings UI, stored in the keyring and otherwise exists only in memory.
@@ -274,13 +274,13 @@ Passwords are **never** written to `config.json`. The `pass` field is marked `#[
 
 **Lifecycle**: Created on app start, deleted on app exit. Old files from crashed sessions may accumulate — they are safe to delete.
 
-**Note**: This directory is managed entirely by the `tray-icon` crate. OTP-Scout does not interact with it directly.
+**Note**: This directory is managed entirely by the `tray-icon` crate. OTP Scout does not interact with it directly.
 
 ---
 
-## 6. What OTP-Scout Doesn't Store
+## 6. What OTP Scout Doesn't Store
 
-OTP-Scout doesn't create the following:
+OTP Scout doesn't create the following:
 
 - **No log files** — logging goes to stdout/stderr only; the Log tab keeps the last 500 entries in memory
 - **No code or mail history**: detected codes and mail text are never written to disk

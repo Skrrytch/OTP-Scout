@@ -210,12 +210,12 @@ struct ImportFile {
 
 /// Reads exported rules; a plain `rules.json` is accepted as well.
 pub fn parse_import(json: &str) -> Result<Vec<DetectionRule>> {
-    let file: ImportFile = serde_json::from_str(json).context("Not a valid OTP-Scout rule export")?;
+    let file: ImportFile = serde_json::from_str(json).context("Not a valid OTP Scout rule export")?;
     if file.file_type.as_deref().is_some_and(|t| t != EXPORT_TYPE) {
-        bail!("Not an OTP-Scout rule export");
+        bail!("Not an OTP Scout rule export");
     }
     if file.version > RULES_VERSION {
-        bail!("Export has version {}, this build supports up to {RULES_VERSION} – please update OTP-Scout", file.version);
+        bail!("Export has version {}, this build supports up to {RULES_VERSION} – please update OTP Scout", file.version);
     }
     let mut seen = Vec::new();
     for rule in &file.rules {

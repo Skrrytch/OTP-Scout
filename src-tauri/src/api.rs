@@ -231,7 +231,7 @@ fn deliver(ctx: &Ctx, kind: RuleKind, value: &str, rule: &str) -> Reply {
         "kind": kind,
         "account": "Browser",
         "rule": rule,
-        "from": "via OTP-Scout API",
+        "from": "via OTP Scout API",
         "subject": null,
         "timestamp": now(),
     })

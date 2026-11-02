@@ -78,5 +78,5 @@ jobs:
             sudo apt install ./otp-scout_*_amd64.deb
             ```
 
-            Then start **OTP-Scout** from the application menu – it lives in the system tray.
+            Then start **OTP Scout** from the application menu – it lives in the system tray.
             Verify the download with `sha256sum -c SHA256SUMS`.
