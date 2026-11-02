@@ -275,7 +275,72 @@ pub enum HeaderMatch {
 static URL_RE: std::sync::LazyLock<Regex> =
     std::sync::LazyLock::new(|| Regex::new(r#"(?i)https?://[^\s"'<>()\[\]]+"#).unwrap());
 
-/// First URL in `body` starting with `prefix` (case-insensitive).
+/// Decodes `%XX` escapes; invalid escapes are kept as they are.
+fn percent_decode(s: &str) -> String {
+    let b = s.as_bytes();
+    let mut out = Vec::with_capacity(b.len());
+    let mut i = 0;
+    while i < b.len() {
+        let hex = (b[i] == b'%' && i + 2 < b.len())
+            .then(|| std::str::from_utf8(&b[i + 1..i + 3]).ok().and_then(|h| u8::from_str_radix(h, 16).ok()))
+            .flatten();
+        match hex {
+            Some(v) => {
+                out.push(v);
+                i += 3;
+            }
+            None => {
+                out.push(b[i]);
+                i += 1;
+            }
+        }
+    }
+    String::from_utf8_lossy(&out).into_owned()
+}
+
+/// URLs nested in `url`, e.g. by click trackers or Safe Links, either raw
+/// (`…/https://x/…`) or percent-encoded in a path segment or query value.
+fn embedded_urls(url: &str) -> Vec<String> {
+    let lower = url.to_ascii_lowercase();
+    let is_url = |l: &str| l.starts_with("https://") || l.starts_with("http://");
+    lower
+        .match_indices("http")
+        .filter(|(i, _)| *i > 0)
+        .filter_map(|(i, _)| {
+            let rest = &url[i..];
+            if is_url(&lower[i..]) {
+                return Some(rest.to_string());
+            }
+            // Encoded: literal delimiters belong to the outer URL.
+            let mut inner = rest[..rest.find(['&', '/', '?', '#']).unwrap_or(rest.len())].to_string();
+            for _ in 0..3 {
+                let decoded = percent_decode(&inner);
+                if decoded == inner {
+                    return None;
+                }
+                inner = decoded;
+                if is_url(&inner.to_ascii_lowercase()) {
+                    return Some(inner);
+                }
+            }
+            None
+        })
+        .collect()
+}
+
+/// `url` or a URL nested in it (up to `depth` levels) starting with `prefix`.
+fn match_prefix(url: &str, prefix: &str, depth: u8) -> Option<String> {
+    if url.to_lowercase().starts_with(prefix) {
+        return Some(url.to_string());
+    }
+    if depth == 0 {
+        return None;
+    }
+    embedded_urls(url).iter().find_map(|u| match_prefix(u, prefix, depth - 1))
+}
+
+/// First URL in `body` starting with `prefix` (case-insensitive), also looking
+/// inside tracking/redirect links that wrap it.
 /// HTML is searched first since its `href`s hold the untruncated links.
 fn find_link(body: &MailBody, prefix: &str) -> Option<String> {
     let html = body.html.replace("&amp;", "&");
@@ -283,8 +348,7 @@ fn find_link(body: &MailBody, prefix: &str) -> Option<String> {
         URL_RE
             .find_iter(src)
             .map(|m| m.as_str().trim_end_matches(['.', ',', ';', ':', '!', '?']))
-            .find(|url| url.to_lowercase().starts_with(prefix))
-            .map(str::to_string)
+            .find_map(|url| match_prefix(url, prefix, 3))
     });
     found
 }
@@ -682,6 +746,28 @@ mod tests {
         let c = CompiledRule::compile(&link_rule("https://claude.ai/magic-link")).unwrap();
         let body = MailBody { text: "https://evil.example/claude.ai/magic-link".into(), html: String::new() };
         assert_eq!(c.match_body(&body), None);
+    }
+
+    #[test]
+    fn test_link_wrapped_in_tracker_path() {
+        let c = CompiledRule::compile(&link_rule("https://artificialanalysis.ai/api/auth/magic-link")).unwrap();
+        let body = MailBody {
+            text: String::new(),
+            html: r#"<a href="https://3r60rpb4.r.us-east-2.awstrack.me/L0/https:%2F%2Fartificialanalysis.ai%2Fapi%2Fauth%2Fmagic-link%2Fverify%3Ftoken=WmuW%26callbackURL=https%253A%252F%252Fartificialanalysis.ai%252Forgs/1/0100/abc=">Log in</a>"#.into(),
+        };
+        assert_eq!(
+            c.match_body(&body),
+            Some("https://artificialanalysis.ai/api/auth/magic-link/verify?token=WmuW&callbackURL=https%3A%2F%2Fartificialanalysis.ai%2Forgs".into())
+        );
+    }
+
+    #[test]
+    fn test_link_wrapped_in_query_and_raw() {
+        let c = CompiledRule::compile(&link_rule("https://claude.ai/magic-link")).unwrap();
+        let q = MailBody { text: "https://safelinks.example/?url=https%3A%2F%2Fclaude.ai%2Fmagic-link%23tok&data=x".into(), html: String::new() };
+        assert_eq!(c.match_body(&q), Some("https://claude.ai/magic-link#tok".into()));
+        let raw = MailBody { text: "https://t.example/r/https://claude.ai/magic-link#tok".into(), html: String::new() };
+        assert_eq!(c.match_body(&raw), Some("https://claude.ai/magic-link#tok".into()));
     }
 
     #[test]
